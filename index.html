@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rank Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        select, button {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            width: 200px;
+        }
+        select:disabled {
+            background-color: #f0f0f0;
+            cursor: not-allowed;
+        }
+        button {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            cursor: pointer;
+            width: 100%;
+            padding: 12px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #1d4ed8;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+            display: none;
+        }
+        .radio-group {
+            margin-bottom: 20px;
+        }
+        .radio-label {
+            margin-right: 20px;
+        }
+        .selects-container {
+            display: flex;
+            gap: 20px;
+        }
+        .select-group {
+            flex: 1;
+        }
+        .error {
+            color: #dc2626;
+            margin-top: 4px;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="title">OW2 Pre/Post S9 Rank Converter</div>
+        
+        <div class="form-group">
+            <label>Convert from:</label>
+            <div class="radio-group">
+                <label class="radio-label">
+                    <input type="radio" name="direction" value="oldToNew" checked> Old System to New System
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="direction" value="newToOld"> New System to Old System
+                </label>
+            </div>
+        </div>
+
+        <div class="selects-container">
+            <div class="select-group">
+                <label>Rank:</label>
+                <select id="rank">
+                    <option value="Bronze">Bronze</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Gold">Gold</option>
+                    <option value="Platinum">Platinum</option>
+                    <option value="Diamond">Diamond</option>
+                    <option value="Master">Master</option>
+                    <option value="GM">GM</option>
+                </select>
+                <div id="rankError" class="error">Champion rank did not exist in old system</div>
+            </div>
+            
+            <div class="select-group">
+                <label>Tier:</label>
+                <select id="tier">
+                    <option value="5">5</option>
+                    <option value="4">4</option>
+                    <option value="3">3</option>
+                    <option value="2">2</option>
+                    <option value="1">1</option>
+                </select>
+            </div>
+        </div>
+
+        <button onclick="convertRank()">Convert</button>
+
+        <div id="result" class="result">
+            <div style="font-weight: bold; margin-bottom: 8px;">Equivalent Rank:</div>
+            <div id="resultText" style="font-size: 20px;"></div>
+        </div>
+    </div>
+
+    <script>
+        const oldDistribution = {
+            Bronze: 10.2,
+            Silver: 19.1,
+            Gold: 26.8,
+            Platinum: 26.2,
+            Diamond: 12.3,
+            Master: 3.9,
+            GM: 1.5
+        };
+
+        const newDistribution = {
+            Bronze: 4.73,
+            Silver: 20.2,
+            Gold: 36.67,
+            Platinum: 26.93,
+            Diamond: 9.4,
+            Master: 1.93,
+            GM: 0.27,
+            Champ: 0.1
+        };
+
+        function calculatePercentile(rank, tier, distribution) {
+            let totalPercentile = 0;
+            let rankPercentile = 0;
+            
+            for (const [r, percent] of Object.entries(distribution)) {
+                if (r === rank) {
+                    const tierSize = percent / 5;
+                    rankPercentile = percent - (tierSize * (parseInt(tier) - 1));
+                    break;
+                }
+                totalPercentile += percent;
+            }
+            
+            return totalPercentile + rankPercentile;
+        }
+
+        function findEquivalentRank(percentile, distribution) {
+            let accumulatedPercent = 0;
+            
+            for (const [rank, percent] of Object.entries(distribution)) {
+                accumulatedPercent += percent;
+                if (accumulatedPercent >= percentile) {
+                    const tierSize = percent / 5;
+                    const remainingPercent = accumulatedPercent - percentile;
+                    const tier = Math.max(1, Math.min(5, Math.ceil((remainingPercent / tierSize))));
+                    return { rank, tier };
+                }
+            }
+            
+            return { rank: 'Champ', tier: 1 };
+        }
+
+        function convertRank() {
+            const direction = document.querySelector('input[name="direction"]:checked').value;
+            const selectedRank = document.getElementById('rank').value;
+            const selectedTier = document.getElementById('tier').value;
+            
+            const sourceDistribution = direction === 'oldToNew' ? oldDistribution : newDistribution;
+            const targetDistribution = direction === 'oldToNew' ? newDistribution : oldDistribution;
+            
+            const percentile = calculatePercentile(selectedRank, selectedTier, sourceDistribution);
+            const equivalentRank = findEquivalentRank(percentile, targetDistribution);
+            
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('resultText').textContent = 
+                `${equivalentRank.rank} ${equivalentRank.tier}`;
+        }
+
+        // Update rank options based on direction
+        document.querySelectorAll('input[name="direction"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const rankSelect = document.getElementById('rank');
+                
+                // Clear existing options
+                rankSelect.innerHTML = '';
+                
+                // Add standard ranks
+                const standardRanks = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'GM'];
+                standardRanks.forEach(rank => {
+                    rankSelect.add(new Option(rank, rank));
+                });
+                
+                // Add Champ only for new->old conversion
+                if (this.value === 'newToOld') {
+                    rankSelect.add(new Option('Champ', 'Champ'));
+                }
+            });
+        });
+    </script>
+	Based on: <a href= https://i.imgur.com/UU64UnN.png> this image </href> pulled from <a href= https://youtu.be/0vArSaM9EQA?si=kAinEmK3m20l1iU9&t=217> this video </href>
+</body>
+</html>
