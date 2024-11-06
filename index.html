@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rank Converter</title>
+    <title>Overwatch 2 Rank Converter</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -80,11 +80,35 @@
             font-size: 14px;
             display: none;
         }
+        .stat-box {
+            background-color: #f1f5f9;
+            padding: 12px;
+            margin-top: 12px;
+            border-radius: 4px;
+            border-left: 4px solid #2563eb;
+        }
+        .stat-title {
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 4px;
+        }
+        .github-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        .github-link a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .github-link a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <div class="title">OW2 Pre/Post S9 Rank Converter</div>
+        <div class="title">Overwatch 2 Rank Converter</div>
         
         <div class="form-group">
             <label>Convert from:</label>
@@ -105,12 +129,11 @@
                     <option value="Bronze">Bronze</option>
                     <option value="Silver">Silver</option>
                     <option value="Gold">Gold</option>
-                    <option value="Platinum">Platinum</option>
-                    <option value="Diamond">Diamond</option>
+                    <option value="Plat">Plat</option>
+                    <option value="Diam">Diam</option>
                     <option value="Master">Master</option>
                     <option value="GM">GM</option>
                 </select>
-                <div id="rankError" class="error">Champion rank did not exist in old system</div>
             </div>
             
             <div class="select-group">
@@ -128,8 +151,24 @@
         <button onclick="convertRank()">Convert</button>
 
         <div id="result" class="result">
-            <div style="font-weight: bold; margin-bottom: 8px;">Equivalent Rank:</div>
-            <div id="resultText" style="font-size: 20px;"></div>
+            <div class="stat-box">
+                <div class="stat-title">Equivalent Rank</div>
+                <div id="resultText" style="font-size: 20px;"></div>
+            </div>
+            
+            <div class="stat-box">
+                <div class="stat-title">Percentile Stats</div>
+                <div id="percentileText"></div>
+            </div>
+            
+            <div class="stat-box">
+                <div class="stat-title">Player Position</div>
+                <div id="positionText"></div>
+            </div>
+        </div>
+
+        <div class="github-link">
+            <a href="https://github.com/[your-username]/overwatch-rank-converter" target="_blank">View on GitHub</a>
         </div>
     </div>
 
@@ -138,8 +177,8 @@
             Bronze: 10.2,
             Silver: 19.1,
             Gold: 26.8,
-            Platinum: 26.2,
-            Diamond: 12.3,
+            Plat: 26.2,
+            Diam: 12.3,
             Master: 3.9,
             GM: 1.5
         };
@@ -148,8 +187,8 @@
             Bronze: 4.73,
             Silver: 20.2,
             Gold: 36.67,
-            Platinum: 26.93,
-            Diamond: 9.4,
+            Plat: 26.93,
+            Diam: 9.4,
             Master: 1.93,
             GM: 0.27,
             Champ: 0.1
@@ -187,6 +226,13 @@
             return { rank: 'Champ', tier: 1 };
         }
 
+        function formatPosition(position) {
+            if (position % 10 === 1 && position !== 11) return position + "st";
+            if (position % 10 === 2 && position !== 12) return position + "nd";
+            if (position % 10 === 3 && position !== 13) return position + "rd";
+            return position + "th";
+        }
+
         function convertRank() {
             const direction = document.querySelector('input[name="direction"]:checked').value;
             const selectedRank = document.getElementById('rank').value;
@@ -198,9 +244,18 @@
             const percentile = calculatePercentile(selectedRank, selectedTier, sourceDistribution);
             const equivalentRank = findEquivalentRank(percentile, targetDistribution);
             
+            // Calculate position in a line of 100 players
+            const position = Math.max(1, Math.round(percentile));
+            const topPercent = (100 - percentile).toFixed(1);
+            
+            // Display results
             document.getElementById('result').style.display = 'block';
             document.getElementById('resultText').textContent = 
                 `${equivalentRank.rank} ${equivalentRank.tier}`;
+            document.getElementById('percentileText').textContent = 
+                `You are in the top ${topPercent}% of players`;
+            document.getElementById('positionText').textContent = 
+                `In a line of 100 players sorted by rank, you would be the ${formatPosition(position)} person from the top`;
         }
 
         // Update rank options based on direction
@@ -212,7 +267,7 @@
                 rankSelect.innerHTML = '';
                 
                 // Add standard ranks
-                const standardRanks = ['Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Master', 'GM'];
+                const standardRanks = ['Bronze', 'Silver', 'Gold', 'Plat', 'Diam', 'Master', 'GM'];
                 standardRanks.forEach(rank => {
                     rankSelect.add(new Option(rank, rank));
                 });
