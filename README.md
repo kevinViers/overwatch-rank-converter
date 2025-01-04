@@ -6,6 +6,10 @@ A simple tool to convert Overwatch 2 ranks between pre-Season 9 and post-Season 
 
 **Access the converter here:** https://kevinviers.github.io/overwatch-rank-converter/
 
+## Credits
+
+Distribution data source: [Overwatch rank DEFLATION: Explained](https://youtu.be/0vArSaM9EQA?si=kAinEmK3m20l1iU9&t=217)
+
 ## Local Usage
 
 You can use this tool in two ways:
@@ -41,33 +45,6 @@ Post-Season 9:
 - Master: 1.93%
 - Grandmaster: 0.27%
 - Champion: 0.1%
-
-## Disclaimers
-
-- This tool provides **approximate** conversions based on percentile rankings
-- Individual placements may vary based on multiple factors including:
-  - MMR changes
-  - Performance in placement matches
-  - Changes to the ranking algorithm
-  - Account activity/inactivity
-- The Champion rank was introduced in Season 9 and has no direct equivalent in the old system
-- Blizzard's internal MMR system and placement algorithms may produce different results
-- This tool is unofficial and not affiliated with Blizzard Entertainment
-
-## GitHub Pages Deployment
-
-If you want to fork this repository and host your own version:
-
-1. Fork this repository
-2. Go to repository Settings
-3. Navigate to Pages section
-4. Under "Source", select "main" branch
-5. Save the changes
-6. Your site will be available at `https://kevinviers.github.io/overwatch-rank-converter/`
-
-## Credits
-
-Distribution data source: [Overwatch rank DEFLATION: Explained](https://youtu.be/0vArSaM9EQA?si=kAinEmK3m20l1iU9&t=217)
 
 ## License
 
