@@ -1,281 +1,391 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Overwatch 2 Rank Converter</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        .card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 20px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: bold;
-        }
-        select, button {
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-            width: 200px;
-        }
-        select:disabled {
-            background-color: #f0f0f0;
-            cursor: not-allowed;
-        }
-        button {
-            background-color: #2563eb;
-            color: white;
-            border: none;
-            cursor: pointer;
-            width: 100%;
-            padding: 12px;
-            margin-top: 20px;
-        }
-        button:hover {
-            background-color: #1d4ed8;
-        }
-        .result {
-            margin-top: 20px;
-            padding: 16px;
-            background-color: #f8f8f8;
-            border-radius: 4px;
-            display: none;
-        }
-        .radio-group {
-            margin-bottom: 20px;
-        }
-        .radio-label {
-            margin-right: 20px;
-        }
-        .selects-container {
-            display: flex;
-            gap: 20px;
-        }
-        .select-group {
-            flex: 1;
-        }
-        .error {
-            color: #dc2626;
-            margin-top: 4px;
-            font-size: 14px;
-            display: none;
-        }
-        .stat-box {
-            background-color: #f1f5f9;
-            padding: 12px;
-            margin-top: 12px;
-            border-radius: 4px;
-            border-left: 4px solid #2563eb;
-        }
-        .stat-title {
-            font-weight: bold;
-            color: #1e40af;
-            margin-bottom: 4px;
-        }
-        .github-link {
-            text-align: center;
-            margin-top: 20px;
-            font-size: 14px;
-        }
-        .github-link a {
-            color: #2563eb;
-            text-decoration: none;
-        }
-        .github-link a:hover {
-            text-decoration: underline;
-        }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <div class="title">Overwatch 2 Rank Converter</div>
-        
-        <div class="form-group">
-            <label>Convert from:</label>
-            <div class="radio-group">
-                <label class="radio-label">
-                    <input type="radio" name="direction" value="oldToNew" checked> Old System to New System
-                </label>
-                <label class="radio-label">
-                    <input type="radio" name="direction" value="newToOld"> New System to Old System
-                </label>
-            </div>
-        </div>
-
-        <div class="selects-container">
-            <div class="select-group">
-                <label>Rank:</label>
-                <select id="rank">
-                    <option value="Bronze">Bronze</option>
-                    <option value="Silver">Silver</option>
-                    <option value="Gold">Gold</option>
-                    <option value="Plat">Plat</option>
-                    <option value="Diam">Diam</option>
-                    <option value="Master">Master</option>
-                    <option value="GM">GM</option>
-                </select>
-            </div>
-            
-            <div class="select-group">
-                <label>Tier:</label>
-                <select id="tier">
-                    <option value="5">5</option>
-                    <option value="4">4</option>
-                    <option value="3">3</option>
-                    <option value="2">2</option>
-                    <option value="1">1</option>
-                </select>
-            </div>
-        </div>
-
-        <button onclick="convertRank()">Convert</button>
-
-        <div id="result" class="result">
-            <div class="stat-box">
-                <div class="stat-title">Equivalent Rank</div>
-                <div id="resultText" style="font-size: 20px;"></div>
-            </div>
-            
-            <div class="stat-box">
-                <div class="stat-title">Percentile Stats</div>
-                <div id="percentileText"></div>
-            </div>
-            
-            <div class="stat-box">
-                <div class="stat-title">Player Position</div>
-                <div id="positionText"></div>
-            </div>
-        </div>
-
-    
-    </div>
-
-    <script>
-        const oldDistribution = {
-            Bronze: 10.2,
-            Silver: 19.1,
-            Gold: 26.8,
-            Plat: 26.2,
-            Diam: 12.3,
-            Master: 3.9,
-            GM: 1.5
-        };
-
-        const newDistribution = {
-            Bronze: 4.73,
-            Silver: 20.2,
-            Gold: 36.67,
-            Plat: 26.93,
-            Diam: 9.4,
-            Master: 1.93,
-            GM: 0.27,
-            Champ: 0.1
-        };
-
-        function calculatePercentile(rank, tier, distribution) {
-            let totalPercentile = 0;
-            let rankPercentile = 0;
-            
-            for (const [r, percent] of Object.entries(distribution)) {
-                if (r === rank) {
-                    const tierSize = percent / 5;
-                    rankPercentile = percent - (tierSize * (parseInt(tier) - 1));
-                    break;
-                }
-                totalPercentile += percent;
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Overwatch 2 Rank Converter</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                background-color: #f0f0f0;
             }
-            
-            return totalPercentile + rankPercentile;
-        }
-
-        function findEquivalentRank(percentile, distribution) {
-            let accumulatedPercent = 0;
-            
-            for (const [rank, percent] of Object.entries(distribution)) {
-                accumulatedPercent += percent;
-                if (accumulatedPercent >= percentile) {
-                    const tierSize = percent / 5;
-                    const remainingPercent = accumulatedPercent - percentile;
-                    const tier = Math.max(1, Math.min(5, Math.ceil((remainingPercent / tierSize))));
-                    return { rank, tier };
-                }
+            .card {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                max-width: 600px;
+                margin: 0 auto;
+                padding: 20px;
             }
-            
-            return { rank: 'Champ', tier: 1 };
-        }
+            .title {
+                font-size: 24px;
+                font-weight: bold;
+                margin-bottom: 20px;
+            }
+            .form-group {
+                margin-bottom: 20px;
+            }
+            label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: bold;
+            }
+            select, button {
+                padding: 8px;
+                border-radius: 4px;
+                border: 1px solid #ccc;
+                width: 200px;
+            }
+            select:disabled {
+                background-color: #f0f0f0;
+                cursor: not-allowed;
+            }
+            button {
+                background-color: #2563eb;
+                color: white;
+                border: none;
+                cursor: pointer;
+                width: 100%;
+                padding: 12px;
+                margin-top: 20px;
+            }
+            button:hover {
+                background-color: #1d4ed8;
+            }
+            .result {
+                margin-top: 20px;
+                padding: 16px;
+                background-color: #f8f8f8;
+                border-radius: 4px;
+                display: none;
+            }
+            .radio-group {
+                margin-bottom: 20px;
+            }
+            .radio-label {
+                margin-right: 20px;
+            }
+            .selects-container {
+                display: flex;
+                gap: 20px;
+            }
+            .select-group {
+                flex: 1;
+            }
+            .error {
+                color: #dc2626;
+                margin-top: 4px;
+                font-size: 14px;
+                display: none;
+            }
+            .stat-box {
+                background-color: #f1f5f9;
+                padding: 12px;
+                margin-top: 12px;
+                border-radius: 4px;
+                border-left: 4px solid #2563eb;
+            }
+            .stat-title {
+                font-weight: bold;
+                color: #1e40af;
+                margin-bottom: 4px;
+            }
+            .github-link {
+                text-align: center;
+                margin-top: 20px;
+                font-size: 14px;
+            }
+            .github-link a {
+                color: #2563eb;
+                text-decoration: none;
+            }
+            .github-link a:hover {
+                text-decoration: underline;
+            }
+            #chartContainer {
+                height: 400px;
+                width: 100%;
+                background-color: white;
+                margin: 20px 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="title">Overwatch 2 Rank Converter</div>
 
-        function formatPosition(position) {
-            if (position % 10 === 1 && position !== 11) return position + "st";
-            if (position % 10 === 2 && position !== 12) return position + "nd";
-            if (position % 10 === 3 && position !== 13) return position + "rd";
-            return position + "th";
-        }
+            <div class="form-group">
+                <label>Convert from:</label>
+                <div class="radio-group">
+                    <label class="radio-label">
+                        <input type="radio" name="direction" value="newToOld"> Post-S9 to Pre-S9
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="direction" value="oldToNew" checked> Pre-S9 to Post-S9
+                    </label>
+                </div>
+            </div>
 
-        function convertRank() {
-            const direction = document.querySelector('input[name="direction"]:checked').value;
-            const selectedRank = document.getElementById('rank').value;
-            const selectedTier = document.getElementById('tier').value;
-            
-            const sourceDistribution = direction === 'oldToNew' ? oldDistribution : newDistribution;
-            const targetDistribution = direction === 'oldToNew' ? newDistribution : oldDistribution;
-            
-            const percentile = calculatePercentile(selectedRank, selectedTier, sourceDistribution);
-            const equivalentRank = findEquivalentRank(percentile, targetDistribution);
-            
-            // Calculate position in a line of 100 players
-            const position = Math.max(1, Math.round(percentile));
-            const topPercent = (100 - percentile).toFixed(1);
-            
-            // Display results
-            document.getElementById('result').style.display = 'block';
-            document.getElementById('resultText').textContent = 
-                `${equivalentRank.rank} ${equivalentRank.tier}`;
-            document.getElementById('percentileText').textContent = 
-                `You are in the top ${topPercent}% of players`;
-            document.getElementById('positionText').textContent = 
-                `In a line of 100 players sorted by rank, you would be the ${formatPosition(position)} person from the top`;
-        }
+            <div class="selects-container">
+                <div class="select-group">
+                    <label>Rank:</label>
+                    <select id="rank">
+                        <option value="Bronze">Bronze</option>
+                        <option value="Silver">Silver</option>
+                        <option value="Gold">Gold</option>
+                        <option value="Plat">Plat</option>
+                        <option value="Diam">Diam</option>
+                        <option value="Master">Master</option>
+                        <option value="GM">GM</option>
+                    </select>
+                </div>
 
-        // Update rank options based on direction
-        document.querySelectorAll('input[name="direction"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const rankSelect = document.getElementById('rank');
-                
-                // Clear existing options
-                rankSelect.innerHTML = '';
-                
-                // Add standard ranks
-                const standardRanks = ['Bronze', 'Silver', 'Gold', 'Plat', 'Diam', 'Master', 'GM'];
-                standardRanks.forEach(rank => {
-                    rankSelect.add(new Option(rank, rank));
+                <div class="select-group">
+                    <label>Tier:</label>
+                    <select id="tier">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="convertRank()">Convert</button>
+
+            <a href="https://youtu.be/0vArSaM9EQA?si=kAinEmK3m20l1iU9&t=217">Source for rank distribution</a>
+            <br>
+            <a href="https://github.com/kevinViers/overwatch-rank-converter">Source code available on github</a>
+
+            <div id="result" class="result">
+                <div id="chartContainer"></div>
+
+                <div class="stat-box">
+                    <div class="stat-title">Equivalent Rank</div>
+                    <div id="resultText" style="font-size: 20px;"></div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-title">Percentile Stats</div>
+                    <div id="percentileText"></div>
+                </div>
+
+                <div class="stat-box">
+                    <div class="stat-title">Player Position</div>
+                    <div id="positionText"></div>
+                </div>
+            </div>
+        </div>
+        <script>
+            // Distribution data
+            const oldDistribution = {
+                Bronze: 10.2,
+                Silver: 19.1,
+                Gold: 26.8,
+                Plat: 26.2,
+                Diam: 12.3,
+                Master: 3.9,
+                GM: 1.5
+            };
+
+            const newDistribution = {
+                Bronze: 4.73,
+                Silver: 20.2,
+                Gold: 36.67,
+                Plat: 26.93,
+                Diam: 9.4,
+                Master: 1.93,
+                GM: 0.27,
+                Champ: 0.1
+            };
+
+            function drawChart(selectedRank, selectedTier, isNewSystem) {
+                const canvas = document.createElement('canvas');
+                const container = document.getElementById('chartContainer');
+                canvas.width = container.clientWidth;
+                canvas.height = 400;
+
+                const ctx = canvas.getContext('2d');
+                container.innerHTML = '';
+                container.appendChild(canvas);
+
+                function getTierValue(totalValue, tier) {
+                    const tierSize = totalValue / 5;
+                    return tierSize * (6 - parseInt(tier)); // Since tier 1 is highest, 5 is lowest
+                }
+
+                // Data with tier calculations
+                const data = isNewSystem ? [
+                    { name: 'Bronze', total: 4.73, value: selectedRank === 'Bronze' ? getTierValue(4.73, selectedTier) : 4.73/5 },
+                    { name: 'Silver', total: 20.2, value: selectedRank === 'Silver' ? getTierValue(20.2, selectedTier) : 20.2/5 },
+                    { name: 'Gold', total: 36.67, value: selectedRank === 'Gold' ? getTierValue(36.67, selectedTier) : 36.67/5 },
+                    { name: 'Plat', total: 26.93, value: selectedRank === 'Plat' ? getTierValue(26.93, selectedTier) : 26.93/5 },
+                    { name: 'Diam', total: 9.4, value: selectedRank === 'Diam' ? getTierValue(9.4, selectedTier) : 9.4/5 },
+                    { name: 'Master', total: 1.93, value: selectedRank === 'Master' ? getTierValue(1.93, selectedTier) : 1.93/5 },
+                    { name: 'GM', total: 0.27, value: selectedRank === 'GM' ? getTierValue(0.27, selectedTier) : 0.27/5 },
+                    { name: 'Champ', total: 0.1, value: selectedRank === 'Champ' ? getTierValue(0.1, selectedTier) : 0.1/5 }
+                ] : [
+                    { name: 'Bronze', total: 10.2, value: selectedRank === 'Bronze' ? getTierValue(10.2, selectedTier) : 10.2/5 },
+                    { name: 'Silver', total: 19.1, value: selectedRank === 'Silver' ? getTierValue(19.1, selectedTier) : 19.1/5 },
+                    { name: 'Gold', total: 26.8, value: selectedRank === 'Gold' ? getTierValue(26.8, selectedTier) : 26.8/5 },
+                    { name: 'Plat', total: 26.2, value: selectedRank === 'Plat' ? getTierValue(26.2, selectedTier) : 26.2/5 },
+                    { name: 'Diam', total: 12.3, value: selectedRank === 'Diam' ? getTierValue(12.3, selectedTier) : 12.3/5 },
+                    { name: 'Master', total: 3.9, value: selectedRank === 'Master' ? getTierValue(3.9, selectedTier) : 3.9/5 },
+                    { name: 'GM', total: 1.5, value: selectedRank === 'GM' ? getTierValue(1.5, selectedTier) : 1.5/5 }
+                ];
+
+                const margin = { top: 40, right: 40, bottom: 60, left: 60 };
+                const width = canvas.width - margin.left - margin.right;
+                const height = canvas.height - margin.top - margin.bottom;
+
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                // Find max value for scaling (using total values for proper scaling)
+                const maxValue = Math.max(...data.map(d => d.total));
+
+                const barWidth = width / data.length * 0.8;
+                const barSpacing = width / data.length;
+
+                // Draw bars
+                data.forEach((item, i) => {
+                    // Draw full height bar in gray
+                    const fullBarHeight = (item.total / maxValue) * height;
+                    const x = margin.left + (i * barSpacing) + (barSpacing - barWidth) / 2;
+                    const y = margin.top + height - fullBarHeight;
+
+                    // Draw full bar in light gray
+                    ctx.fillStyle = '#e2e8f0';
+                    ctx.fillRect(x, y, barWidth, fullBarHeight);
+
+                    // Draw tier-specific bar in blue for selected rank or gray for others
+                    const tierBarHeight = (item.value / maxValue) * height;
+                    const tierY = margin.top + height - tierBarHeight;
+                    ctx.fillStyle = item.name === selectedRank ? '#2563eb' : '#94a3b8';
+                    ctx.fillRect(x, tierY, barWidth, tierBarHeight);
+
+                    // Draw label
+                    ctx.save();
+                    ctx.translate(x + barWidth/2, height + margin.top + 10);
+                    ctx.rotate(-Math.PI/4);
+                    ctx.fillStyle = 'black';
+                    ctx.textAlign = 'right';
+                    ctx.fillText(item.name, 0, 0);
+                    ctx.restore();
+
+                    // Draw values
+                    ctx.fillStyle = 'black';
+                    ctx.textAlign = 'center';
+                    // Show tier value for selected rank, total for others
+                    const displayValue = item.name === selectedRank ? item.value.toFixed(2) : item.total.toFixed(1);
+                    ctx.fillText(displayValue + '%', x + barWidth/2, y - 5);
                 });
-                
-                // Add Champ only for new->old conversion
-                if (this.value === 'newToOld') {
-                    rankSelect.add(new Option('Champ', 'Champ'));
+
+                // Draw Y axis
+                ctx.beginPath();
+                ctx.moveTo(margin.left, margin.top);
+                ctx.lineTo(margin.left, height + margin.top);
+                ctx.stroke();
+
+                // Draw Y axis label
+                ctx.save();
+                ctx.translate(20, height/2 + margin.top);
+                ctx.rotate(-Math.PI/2);
+                ctx.textAlign = 'center';
+                ctx.fillText('% of Players', 0, 0);
+                ctx.restore();
+            }
+
+            // Utility functions
+            function calculatePercentile(rank, tier, distribution) {
+                let totalPercentile = 0;
+                let rankPercentile = 0;
+
+                for (const [r, percent] of Object.entries(distribution)) {
+                    if (r === rank) {
+                        const tierSize = percent / 5;
+                        rankPercentile = percent - (tierSize * (parseInt(tier) - 1));
+                        break;
+                    }
+                    totalPercentile += percent;
                 }
+
+                return totalPercentile + rankPercentile;
+            }
+
+            function findEquivalentRank(percentile, distribution) {
+                let accumulatedPercent = 0;
+
+                for (const [rank, percent] of Object.entries(distribution)) {
+                    accumulatedPercent += percent;
+                    if (accumulatedPercent >= percentile) {
+                        const tierSize = percent / 5;
+                        const remainingPercent = accumulatedPercent - percentile;
+                        const tier = Math.max(1, Math.min(5, Math.ceil((remainingPercent / tierSize))));
+                        return { rank, tier };
+                    }
+                }
+
+                return { rank: 'Champ', tier: 1 };
+            }
+function formatPosition(position) {
+    if (position % 10 === 1 && position !== 11) return position + "st";
+    if (position % 10 === 2 && position !== 12) return position + "nd";
+    if (position % 10 === 3 && position !== 13) return position + "rd";
+    return position + "th";
+}
+            function convertRank() {
+                const direction = document.querySelector('input[name="direction"]:checked').value;
+                const selectedRank = document.getElementById('rank').value;
+                const selectedTier = document.getElementById('tier').value;
+
+                const sourceDistribution = direction === 'oldToNew' ? oldDistribution : newDistribution;
+                const targetDistribution = direction === 'oldToNew' ? newDistribution : oldDistribution;
+
+                const percentile = calculatePercentile(selectedRank, selectedTier, sourceDistribution);
+                const equivalentRank = findEquivalentRank(percentile, targetDistribution);
+
+                // Calculate position in a line of 100 players
+                const position = Math.max(1, Math.round(percentile));
+                const topPercent = (100 - percentile).toFixed(1);
+
+                // Display results
+                document.getElementById('result').style.display = 'block';
+                document.getElementById('resultText').textContent = 
+                    `${equivalentRank.rank} ${equivalentRank.tier}`;
+                document.getElementById('percentileText').textContent = 
+                    `You are in the top ${topPercent}% of players`;
+                document.getElementById('positionText').textContent = 
+                    `In a list of 100 players worst (left) to best (right), you would be the ${formatPosition(position)} person from the left`;
+
+                // Update chart
+                const isNewSystem = direction === 'newToOld';
+                drawChart(selectedRank, selectedTier, isNewSystem);
+            }
+
+            // Update rank options based on direction
+            document.querySelectorAll('input[name="direction"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const rankSelect = document.getElementById('rank');
+
+                    // Clear existing options
+                    rankSelect.innerHTML = '';
+
+                    // Add standard ranks
+                    const standardRanks = ['Bronze', 'Silver', 'Gold', 'Plat', 'Diam', 'Master', 'GM'];
+                    standardRanks.forEach(rank => {
+                        rankSelect.add(new Option(rank, rank));
+                    });
+
+                    // Add Champ only for new->old conversion
+                    if (this.value === 'newToOld') {
+                        rankSelect.add(new Option('Champ', 'Champ'));
+                    }
+                });
             });
-        });
-    </script>
-</body>
+        </script>
+    </body>
 </html>
